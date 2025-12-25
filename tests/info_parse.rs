@@ -1,4 +1,4 @@
-use bili_api::{APIResponse, info::VideoInfoData};
+use bili_api::{APIResponse, video::info::VideoInfoData};
 
 #[test]
 fn test_info_parse() {

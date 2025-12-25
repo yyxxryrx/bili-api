@@ -1,5 +1,5 @@
 // TODO: 当前文件有点乱，到时候会拆分的
-use crate::{APIResponse, error::APIResult, get_client};
+use crate::{APIResponse, error::APIResult};
 use serde::{Deserialize, Serialize};
 
 /// The information of video
@@ -16,7 +16,7 @@ pub struct VideoInfoData {
     /// The avid of video
     ///
     /// 视频的aid
-    pub aid: u32,
+    pub aid: u64,
     /// The number of the video list
     ///
     /// 视频分P的数量
@@ -89,11 +89,11 @@ pub struct VideoInfoData {
     ///
     /// > This field only exists in collision videos
     ///
-    /// 撞车视频跳转avid
+    /// 撞车视频跳转aid
     ///
     /// > 仅有撞车视频存在此字段
     #[serde(default)]
-    pub forward: Option<u32>,
+    pub forward: Option<u64>,
     /// Activity ID in which the manuscript participated
     ///
     /// 稿件参与的活动id
@@ -132,7 +132,7 @@ pub struct VideoInfoData {
     /// Video 1P cid
     ///
     /// 视频1P的cid
-    pub cid: u32,
+    pub cid: u64,
     /// video 1p dimension
     ///
     /// 视频1P的分辨率
@@ -293,7 +293,7 @@ pub struct VideoInfoRights {
 #[derive(Debug, Deserialize, Serialize)]
 pub struct VideoOwner {
     /// UP主mid
-    pub mid: u32,
+    pub mid: u64,
     /// UP主昵称
     pub name: String,
     /// UP主头像
@@ -302,8 +302,8 @@ pub struct VideoOwner {
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct VideoStatue {
-    /// 稿件avid
-    pub aid: u32,
+    /// 稿件aid
+    pub aid: u64,
     /// 播放数
     pub view: u64,
     /// 弹幕数
@@ -353,7 +353,7 @@ pub struct VideoDimension {
 #[derive(Debug, Deserialize, Serialize)]
 pub struct VideoPageInfo {
     /// 分P cid
-    pub cid: u32,
+    pub cid: u64,
     /// 分P 序号
     pub page: u16,
     /// 视频来源
@@ -388,7 +388,7 @@ pub struct VideoSubtitleList {
     /// 是否锁定
     pub is_lock: bool,
     /// 字幕上传者mid
-    // pub author_mid: u32,
+    // pub author_mid: u64,
     /// json 格式字幕文件链接
     pub subtitle_url: String,
     /// 字幕上传者信息
@@ -399,7 +399,7 @@ pub struct VideoSubtitleList {
 #[derive(Debug, Deserialize, Serialize)]
 pub struct VideoSubtitleAuthor {
     /// 字幕上传者mid
-    pub mid: u32,
+    pub mid: u64,
     /// 字幕上传者名称
     pub name: String,
     /// 字幕上传者性别
@@ -470,11 +470,11 @@ pub struct VideoUgcSeasonSectionEpisode {
     /// 视频合集中视频合集分部中视频所属合集分部id
     pub section_id: u32,
     /// 视频合集分部中视频id（以下简称视频）
-    pub id: u32,
+    pub id: u64,
     /// 视频aid
-    pub aid: u32,
+    pub aid: u64,
     /// 视频cid
-    pub cid: u32,
+    pub cid: u64,
     /// 视频标题
     pub title: String,
     /// # 已弃用
@@ -489,7 +489,7 @@ pub struct VideoUgcSeasonSectionEpisode {
 #[derive(Debug, Deserialize, Serialize)]
 pub struct VideoUgcSeasonStat {
     /// 视频合集id
-    pub season_id: u32,
+    pub season_id: u64,
     /// 视频合集总浏览量
     pub view: u64,
     /// 视频合集总评论量
@@ -515,7 +515,7 @@ pub struct VideoUgcSeasonStat {
 #[derive(Debug, Deserialize, Serialize)]
 pub struct VideoStaffInfo {
     /// 成员mid
-    pub mid: u32,
+    pub mid: u64,
     /// 成员名称
     pub title: String,
     /// 成员昵称
@@ -579,7 +579,7 @@ pub struct VideoHonorReply {
 #[derive(Debug, Deserialize, Serialize)]
 pub struct VideoHonor {
     /// 当前稿件aid
-    pub aid: u32,
+    pub aid: u64,
     // TODO: 这里应该是Enum，现放个u8占位
     /// 类型
     #[serde(rename = "type")]
@@ -612,7 +612,7 @@ pub enum DescV2Type {
 
 #[derive(Debug, Clone, Copy)]
 pub enum BizID {
-    Mid(u32),
+    Mid(u64),
     None,
 }
 
@@ -717,7 +717,7 @@ mod biz_id_serde {
     where
         D: Deserializer<'de>,
     {
-        let num = u32::deserialize(deserializer)?;
+        let num = u64::deserialize(deserializer)?;
         match num {
             0 => Ok(BizID::None),
             _ => Ok(BizID::Mid(num)),
@@ -732,7 +732,7 @@ mod biz_id_serde {
             BizID::Mid(mid) => *mid,
             BizID::None => 0,
         };
-        serializer.serialize_u32(num)
+        serializer.serialize_u64(num)
     }
 }
 
@@ -757,66 +757,17 @@ mod video_from_serde {
     }
 }
 
-pub enum VideoID {
-    Aid(u32),
-    Bvid(String),
-}
-
-impl VideoID {
-    pub fn from_str(id: &str) -> Result<Self, error::VideoIDParseError> {
-        let s = id.to_lowercase();
-        if s.starts_with("av") {
-            let avid = s.chars().skip(2).collect::<String>().parse::<u32>()?;
-            return Ok(Self::Aid(avid));
-        }
-        if s.starts_with("bv") {
-            return Ok(Self::Bvid(id.to_string()));
-        }
-        Err(error::VideoIDParseError::FormatError(s))
-    }
-
-    pub fn to_query(&self) -> String {
-        match self {
-            Self::Aid(id) => format!("aid={id}"),
-            Self::Bvid(id) => format!("bvid={id}"),
-        }
-    }
-
-    pub fn aid(&self) -> Option<u32> {
-        match self {
-            Self::Aid(id) => Some(*id),
-            Self::Bvid(..) => None,
-        }
-    }
-
-    pub fn bvid(&self) -> Option<&str> {
-        match self {
-            Self::Aid(..) => None,
-            Self::Bvid(id) => Some(id),
-        }
-    }
-}
-
-pub async fn get_video_info(id: &VideoID) -> APIResult<VideoInfoData> {
-    let client = get_client!()?;
+/// 根据视频ID获取信息
+pub async fn get_video_info(
+    client: &reqwest::Client,
+    id: &super::VideoID,
+) -> APIResult<VideoInfoData> {
     let response = client
-        .get(format!(
-            "https://api.bilibili.com/x/web-interface/view?{}",
-            id.to_query()
-        ))
+        .get("https://api.bilibili.com/x/web-interface/view")
+        .query(&id.to_query())
         .send()
         .await?;
     let json = response.text().await?;
     let data: APIResponse<VideoInfoData> = serde_json::from_str(&json)?;
     data.into_result()
-}
-
-pub mod error {
-    #[derive(Debug, thiserror::Error)]
-    pub enum VideoIDParseError {
-        #[error("ParseError: {0}")]
-        ParseError(#[from] std::num::ParseIntError),
-        #[error("FormatError: str must starts with \"av\" or \"bv\" but got {0:?}")]
-        FormatError(String),
-    }
 }
