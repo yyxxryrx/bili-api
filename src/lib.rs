@@ -40,7 +40,7 @@ where
 {
     pub code: i32,
     pub message: String,
-    pub data: D,
+    pub data: Option<D>,
 }
 
 impl<D> APIResponse<D>
@@ -51,11 +51,14 @@ where
         self.code == 0
     }
 
-    pub fn into_result(self) -> Result<D, String> {
+    pub fn into_result(self) -> crate::error::APIResult<D> {
         if self.is_success() {
-            Ok(self.data)
+            Ok(self.data.unwrap())
         } else {
-            Err(self.message)
+            Err(crate::error::Error::APIError {
+                code: self.code,
+                message: self.message,
+            })
         }
     }
 }

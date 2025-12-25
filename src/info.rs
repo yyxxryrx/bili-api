@@ -15,8 +15,8 @@ pub struct VideoInfoData {
     pub bvid: String,
     /// The avid of video
     ///
-    /// 视频的avid
-    pub avid: u32,
+    /// 视频的aid
+    pub aid: u32,
     /// The number of the video list
     ///
     /// 视频分P的数量
@@ -53,7 +53,8 @@ pub struct VideoInfoData {
     /// publish time (second level timestamp)
     ///
     /// 稿件发布时间（秒级时间戳）
-    pub pubtime: f64,
+    #[serde(default)]
+    pub pubdate: f64,
     /// contribution time (second level timestamp)
     ///
     /// 用户投稿时间（秒级时间戳）
@@ -61,7 +62,8 @@ pub struct VideoInfoData {
     /// video introduction
     ///
     /// 视盘简介
-    pub decs: String,
+    #[serde(default)]
+    pub desc: String,
     /// the new version video introduction
     ///
     /// 新版视频简介
@@ -69,7 +71,7 @@ pub struct VideoInfoData {
     /// video statue
     ///
     /// 视频状态
-    pub statue: i8,
+    pub state: i8,
     /// # Deprecated
     ///
     /// video attribute
@@ -77,7 +79,8 @@ pub struct VideoInfoData {
     /// # 已经弃用
     ///
     /// 稿件属性位配置
-    pub attribute: u8,
+    #[serde(default)]
+    pub attribute: Option<u8>,
     /// video length(all p) (unit: seconds)
     ///
     /// 稿件总时长（所有分P）（单位：秒）
@@ -198,7 +201,7 @@ pub struct VideoInfoData {
     /// Is it a Story Mode video?
     ///
     /// 是否为 Story Mode 视频?
-    pub is_story_play: bool,
+    pub is_story_play: u8,
     /// Are you submitting a video for yourself?
     ///
     /// 是否为自己投稿的视频?
@@ -216,7 +219,7 @@ pub struct VideoDescV2 {
     /// > raw_type=At 时显示'@'+raw_text+' '并链接至biz_id的主页
     pub raw_text: String,
     /// 类型（因为type在rust里是关键子所以原字段名 **type** 用 **raw_type** 代替
-    #[serde(rename = "type")]
+    #[serde(rename = "type", with = "desc_v2_type")]
     pub raw_type: DescV2Type,
     /// 被@的用户的mid
     #[serde(with = "biz_id_serde")]
@@ -240,7 +243,7 @@ pub struct VideoInfoRights {
     /// Is moive?
     ///
     /// 是否是电影
-    pub moive: i32,
+    pub movie: i32,
     /// Is PGC pay?
     ///
     /// 是否PGC付费
@@ -370,8 +373,14 @@ pub struct VideoPageInfo {
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct VideoSubtitleInfo {
+    pub allow_submit: bool,
+    pub list: Vec<VideoSubtitleList>,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct VideoSubtitleList {
     /// 字幕id
-    pub id: u16,
+    pub id: u64,
     /// 字幕语言
     pub lan: String,
     /// 字幕语言名称
@@ -379,7 +388,7 @@ pub struct VideoSubtitleInfo {
     /// 是否锁定
     pub is_lock: bool,
     /// 字幕上传者mid
-    pub author_mid: u32,
+    // pub author_mid: u32,
     /// json 格式字幕文件链接
     pub subtitle_url: String,
     /// 字幕上传者信息
@@ -576,7 +585,7 @@ pub struct VideoHonor {
     #[serde(rename = "type")]
     pub honor_type: u8,
     /// 描述
-    pub desc: i32,
+    pub desc: String,
     pub weekly_recommend_num: i32,
 }
 
@@ -595,11 +604,9 @@ impl From<Copyright> for u8 {
     }
 }
 
-#[derive(Debug, Clone, Copy, Deserialize, Serialize)]
+#[derive(Debug, Clone, Copy)]
 pub enum DescV2Type {
-    #[serde(rename = "1")]
     Normal,
-    #[serde(rename = "2")]
     At,
 }
 
@@ -636,6 +643,37 @@ impl From<&VideoFrom> for String {
             VideoFrom::TencentVideo => "qq".to_string(),
             VideoFrom::Other(from) => from.clone(),
         }
+    }
+}
+
+mod desc_v2_type {
+    use super::DescV2Type;
+    use serde::{Deserialize, Deserializer};
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<DescV2Type, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let num = u8::deserialize(deserializer)?;
+        match num {
+            1 => Ok(DescV2Type::Normal),
+            2 => Ok(DescV2Type::At),
+            _ => Err(serde::de::Error::custom(format!(
+                "unknown copyright value: {}",
+                num
+            ))),
+        }
+    }
+
+    pub fn serialize<S>(desc_v2_type: &DescV2Type, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let num = match desc_v2_type {
+            DescV2Type::Normal => 1,
+            DescV2Type::At => 2,
+        };
+        serializer.serialize_u8(num)
     }
 }
 
@@ -718,9 +756,10 @@ mod video_from_serde {
         serializer.serialize_str(&from)
     }
 }
+
 pub enum VideoID {
-    AvId(u32),
-    BvId(String),
+    Aid(u32),
+    Bvid(String),
 }
 
 impl VideoID {
@@ -728,23 +767,37 @@ impl VideoID {
         let s = id.to_lowercase();
         if s.starts_with("av") {
             let avid = s.chars().skip(2).collect::<String>().parse::<u32>()?;
-            return Ok(Self::AvId(avid));
+            return Ok(Self::Aid(avid));
         }
         if s.starts_with("bv") {
-            return Ok(Self::BvId(id.to_string()));
+            return Ok(Self::Bvid(id.to_string()));
         }
         Err(error::VideoIDParseError::FormatError(s))
     }
 
     pub fn to_query(&self) -> String {
         match self {
-            Self::AvId(id) => format!("aid={id}"),
-            Self::BvId(id) => format!("bvid={id}"),
+            Self::Aid(id) => format!("aid={id}"),
+            Self::Bvid(id) => format!("bvid={id}"),
+        }
+    }
+
+    pub fn aid(&self) -> Option<u32> {
+        match self {
+            Self::Aid(id) => Some(*id),
+            Self::Bvid(..) => None,
+        }
+    }
+
+    pub fn bvid(&self) -> Option<&str> {
+        match self {
+            Self::Aid(..) => None,
+            Self::Bvid(id) => Some(id),
         }
     }
 }
 
-pub async fn get_video_info(id: VideoID) -> APIResult<VideoInfoData> {
+pub async fn get_video_info(id: &VideoID) -> APIResult<VideoInfoData> {
     let client = get_client!()?;
     let response = client
         .get(format!(
@@ -756,8 +809,6 @@ pub async fn get_video_info(id: VideoID) -> APIResult<VideoInfoData> {
     let json = response.text().await?;
     let data: APIResponse<VideoInfoData> = serde_json::from_str(&json)?;
     data.into_result()
-        .map(|v| v)
-        .map_err(|e| crate::error::Error::Other(e.clone()))
 }
 
 pub mod error {
