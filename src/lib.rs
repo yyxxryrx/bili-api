@@ -2,15 +2,20 @@ use std::fmt::Debug;
 
 use serde::Deserialize;
 
+pub mod const_value;
 pub mod error;
-pub mod info;
-pub mod login;
 pub mod user;
+pub mod util;
+pub mod video;
+
+#[cfg(feature = "summon_qrcode")]
+pub extern crate image;
+pub extern crate reqwest;
 
 #[macro_export]
 macro_rules! get_client {
     () => {
-        reqwest::Client::builder()
+        $crate::reqwest::Client::builder()
             .timeout(std::time::Duration::from_secs(30))
             .user_agent("Mozilla/5.0 (X11; Linux x86_64; rv:146.0) Gecko/20100101 Firefox/146.0")
             .build()
