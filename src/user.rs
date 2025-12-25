@@ -1,7 +1,7 @@
 pub mod login;
 
 /// 用户性别
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub enum UserSex {
     /// 男性
     Male,

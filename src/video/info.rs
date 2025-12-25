@@ -589,7 +589,7 @@ pub struct VideoHonor {
     pub weekly_recommend_num: i32,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Copyright {
     Original,
     Reprint,
@@ -604,19 +604,19 @@ impl From<Copyright> for u8 {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum DescV2Type {
     Normal,
     At,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum BizID {
     Mid(u64),
     None,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum VideoFrom {
     Bilibili,
     MangoTV,

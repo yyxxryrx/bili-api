@@ -56,11 +56,11 @@ where
         self.code == 0
     }
 
-    pub fn into_result(self) -> crate::error::APIResult<D> {
+    pub fn into_result(self) -> error::APIResult<D> {
         if self.is_success() {
             Ok(self.data.unwrap())
         } else {
-            Err(crate::error::Error::APIError {
+            Err(error::Error::APIError {
                 code: self.code,
                 message: self.message,
             })

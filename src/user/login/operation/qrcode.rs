@@ -10,7 +10,7 @@ struct LoginQRGenData {
 }
 
 /// 登录二维码状态
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Eq)]
 pub enum LoginQRStatue {
     NoScan,
     TimeoutOrFailure,

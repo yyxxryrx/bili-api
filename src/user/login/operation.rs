@@ -24,7 +24,7 @@ pub struct LoginCaptchaGeetest {
     pub challenge: String,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub enum LoginCaptchaType {
     Geetest,
     Other(String),

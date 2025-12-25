@@ -1,6 +1,7 @@
 pub mod info;
 
 /// 视频ID
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub enum VideoID {
     Aid(u64),
     Bvid(String),
