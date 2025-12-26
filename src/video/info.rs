@@ -13,7 +13,7 @@ pub struct VideoInfoData {
     ///
     /// 视频的bvid
     pub bvid: String,
-    /// The avid of video
+    /// The aid of video
     ///
     /// 视频的aid
     pub aid: u64,

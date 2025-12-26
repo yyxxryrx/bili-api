@@ -4,6 +4,7 @@ use serde::Deserialize;
 
 pub mod const_value;
 pub mod error;
+pub mod sign_and_auth;
 pub mod user;
 pub mod util;
 pub mod video;
@@ -11,6 +12,7 @@ pub mod video;
 #[cfg(feature = "summon_qrcode")]
 pub extern crate image;
 pub extern crate reqwest;
+pub extern crate serde;
 
 #[macro_export]
 macro_rules! get_client {
@@ -35,6 +37,36 @@ macro_rules! make_headers {
             )*
             headers
         }
+    };
+}
+
+#[macro_export]
+macro_rules! make_serde {
+    ($vis:vis mod $name:ident($t:ident) { ($de:ident) => $b1:block $(, ($val:ident, $se:ident) => $b2:block)? $(,)?}) => {
+        $vis mod $name {
+                use super::$t;
+                use $crate::serde::{Deserialize, Deserializer, Serializer};
+
+                pub fn deserialize<'de, D>($de: D) -> Result<$t, D::Error>
+                where
+                    D: Deserializer<'de>,
+                $b1
+
+                $(
+                pub fn serialize<S>(
+                    $val: &$t,
+                    $se: S,
+                ) -> Result<S::Ok, S::Error>
+                where
+                    S: Serializer,
+                $b2
+                )?
+            }
+    };
+    ($($($tt:tt)+);*) => {
+        $(
+            $crate::make_serde!($($tt)+)
+        )*
     };
 }
 

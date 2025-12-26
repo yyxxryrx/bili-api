@@ -11,7 +11,8 @@ pub mod web {
         /// 手机号码
         pub tel: u64,
         /// 登录来源
-        pub source: String,
+        #[serde(with = "crate::user::login::serde_login_source")]
+        pub source: crate::user::login::LoginSource,
         /// 登录 API token
         pub token: String,
         /// 极验 challenge
