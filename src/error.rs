@@ -6,6 +6,8 @@ pub enum Error {
     ParseJsonError(#[from] serde_json::Error),
     #[error("API error({code}): {message}")]
     APIError { code: i32, message: String },
+    #[error("Timeout")]
+    Timeout,
     #[error("Other error: {0}")]
     Other(String),
     #[error("Unknown error: {0}")]
