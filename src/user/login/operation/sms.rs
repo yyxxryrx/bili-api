@@ -4,8 +4,8 @@ pub mod web {
     use std::collections::HashMap;
 
     use crate::{
-        APIResponse, error::APIResult, user::login::LoginSource,
-        util::international::InternationalDialingPrefix,
+        error::APIResult, user::login::LoginSource, util::international::InternationalDialingPrefix,
+        APIResponse,
     };
 
     /// 发送短信验证码 API 参数
@@ -147,5 +147,39 @@ pub mod web {
             captcha_key: data.captcha_key,
             created_time: std::time::Instant::now(),
         })
+    }
+}
+
+/// APP 端 API
+///
+/// TODO: 未完成
+pub mod app {
+    use serde::{Deserialize, Serialize};
+
+    #[derive(Debug, Deserialize, Serialize)]
+    pub struct SMSReqArgs {
+        /// 国际冠字码
+        ///
+        /// 这里不是国际标准的冠码，是B站自己定义的，我暂时懒得维护两套枚举，先用 u16 吧
+        pub cid: u16,
+        /// 手机号码
+        pub tel: u64,
+        /// 登录标识
+        pub login_session_id: String,
+        /// 登录 API token
+        pub recaptcha_token: String,
+        /// 极验 challenge
+        pub gee_challenge: String,
+        /// 极验 result
+        pub gee_validate: String,
+        /// 极验 result + `|jordan`
+        pub gee_seccode: String,
+        /// 通道?
+        ///
+        /// 一般固定值为"bili"
+        pub channel: String,
+        pub buvid: String,
+        pub local_id: String,
+        pub statistics: String,
     }
 }
