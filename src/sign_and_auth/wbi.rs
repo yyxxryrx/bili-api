@@ -23,11 +23,24 @@ impl WbiSign {
     /// 此函数不需要你设置 `wts` 和 `w_rid` 函数会帮你加上
     ///
     /// 此函数也不需要你排序，会帮你排序的
-    pub fn sign(&self, params: &mut Vec<(&str, String)>) -> Result<(), error::SignParamsError> {
+    pub fn sign(&self, params: &mut Vec<(&str, String)>) -> Result<(), SignParamsError> {
         let wts = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH)?;
         params.push(("wts", wts.as_secs().to_string()));
         params.sort_by(|(k1, _), (k2, _)| k1.cmp(k2));
         params.push(("w_rid", self.get_sign(params)?));
+        Ok(())
+    }
+    
+    /// 为参数签名
+    ///
+    /// 此函数不需要你设置 `wts` 和 `w_rid` 函数会帮你加上
+    ///
+    /// 此函数也不需要你排序，会帮你排序的
+    pub fn sign_option(&self, params: &mut Vec<(&str, Option<String>)>) -> Result<(), SignParamsError> {
+        let wts = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH)?;
+        params.push(("wts", Some(wts.as_secs().to_string())));
+        params.sort_by(|(k1, _), (k2, _)| k1.cmp(k2));
+        params.push(("w_rid", Some(self.get_sign(params)?)));
         Ok(())
     }
 
@@ -61,7 +74,7 @@ pub fn gen_mixin_key(raw_wbi_key: impl AsRef<[u8]>) -> String {
     mixin_key
 }
 
-mod error {
+pub mod error {
     #[derive(Debug, thiserror::Error)]
     pub enum SignParamsError {
         #[error("TimeError: {0}")]

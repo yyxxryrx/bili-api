@@ -63,7 +63,7 @@ macro_rules! make_serde {
                 )?
             }
     };
-    ($($($tt:tt)+);*) => {
+    ($($($tt:tt)+);*;) => {
         $(
             $crate::make_serde!($($tt)+)
         )*

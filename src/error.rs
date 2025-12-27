@@ -12,6 +12,8 @@ pub enum Error {
     Other(String),
     #[error("Unknown error: {0}")]
     Unknown(String),
+    #[error("SignParamsError: {0}")]
+    SignParamsError(#[from] crate::sign_and_auth::wbi::error::SignParamsError),
 }
 
 pub type APIResult<T> = Result<T, Error>;

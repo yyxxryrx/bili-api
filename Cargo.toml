@@ -3,6 +3,10 @@ name = "bili-api"
 version = "0.1.0"
 edition = "2024"
 
+[workspace]
+members = [".", "crates/make-serde"]
+resolver = "3"
+
 [features]
 summon_qrcode = ["image", "qrcode"]
 
@@ -24,3 +28,7 @@ optional = true
 [dependencies.reqwest]
 version = "0.12.28"
 features = ["cookies", "json"]
+
+
+[dependencies.make-serde]
+path = "crates/make-serde"

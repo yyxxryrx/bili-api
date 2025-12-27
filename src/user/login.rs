@@ -8,13 +8,13 @@ pub enum LoginSource {
     MainMini,
 }
 
-impl TryFrom<&str> for LoginSource {
-    type Error = String;
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
+impl<'a> TryFrom<&'a str> for LoginSource {
+    type Error = &'a str;
+    fn try_from(value: &'a str) -> Result<Self, Self::Error> {
         match value.to_lowercase().as_str() {
             "main_web" => Ok(Self::MainWeb),
             "main_mini" => Ok(Self::MainMini),
-            _ => Err(value.to_string()),
+            _ => Err(value),
         }
     }
 }

@@ -1,5 +1,5 @@
 pub mod info;
-mod stream;
+pub mod stream;
 
 /// 视频ID
 #[derive(Debug, Clone, Eq, PartialEq)]
