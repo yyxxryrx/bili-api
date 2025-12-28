@@ -88,7 +88,7 @@ pub fn derive_make_serde(input: TokenStream) -> TokenStream {
             }
         }
 
-        impl<'de> Deserialize<'de> for #name {
+        impl<'de> serde::Deserialize<'de> for #name {
             fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
             where
                 D: serde::Deserializer<'de>,
@@ -200,7 +200,7 @@ pub fn derive_summon_from(input: TokenStream) -> TokenStream {
     };
     let from = match other_name.as_ref() {
         Some((n, args)) => {
-            let value = if args.clone {
+            let value = if !args.clone {
                 quote::quote! {
                     value
                 }
@@ -241,7 +241,7 @@ pub fn derive_summon_from(input: TokenStream) -> TokenStream {
                     #(
                         #name::#names => #exprs,
                     )*
-                    #name::#n(v) => v,
+                    #name::#n(v) => *v,
                 }
             }
         }

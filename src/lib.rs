@@ -3,7 +3,9 @@ use std::fmt::Debug;
 use serde::Deserialize;
 
 pub mod const_value;
+pub mod episode;
 pub mod error;
+pub mod misc;
 pub mod sign_and_auth;
 pub mod user;
 pub mod util;
@@ -77,6 +79,7 @@ where
 {
     pub code: i32,
     pub message: String,
+    #[serde(alias = "result")]
     pub data: Option<D>,
 }
 
@@ -95,6 +98,17 @@ where
             Err(error::Error::APIError {
                 code: self.code,
                 message: self.message,
+            })
+        }
+    }
+
+    pub fn result(&self) -> error::APIResult<&D> {
+        if self.is_success() {
+            Ok(self.data.as_ref().unwrap())
+        } else {
+            Err(error::Error::APIError {
+                code: self.code,
+                message: self.message.clone(),
             })
         }
     }
