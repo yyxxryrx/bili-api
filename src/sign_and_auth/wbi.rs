@@ -10,11 +10,11 @@ pub struct WbiSign {
 }
 
 impl WbiSign {
-    pub fn new(img_key: String, sub_key: String) -> Self {
+    pub fn new(img_key: &str, sub_key: &str) -> Self {
         Self {
-            img_key: img_key.clone(),
-            sub_key: sub_key.clone(),
-            mixin_key: gen_mixin_key(img_key + &sub_key),
+            img_key: img_key.to_string(),
+            sub_key: sub_key.to_string(),
+            mixin_key: gen_mixin_key(img_key.to_string() + sub_key),
         }
     }
 
@@ -30,13 +30,16 @@ impl WbiSign {
         params.push(("w_rid", self.get_sign(params)?));
         Ok(())
     }
-    
+
     /// 为参数签名
     ///
     /// 此函数不需要你设置 `wts` 和 `w_rid` 函数会帮你加上
     ///
     /// 此函数也不需要你排序，会帮你排序的
-    pub fn sign_option(&self, params: &mut Vec<(&str, Option<String>)>) -> Result<(), SignParamsError> {
+    pub fn sign_option(
+        &self,
+        params: &mut Vec<(&str, Option<String>)>,
+    ) -> Result<(), SignParamsError> {
         let wts = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH)?;
         params.push(("wts", Some(wts.as_secs().to_string())));
         params.sort_by(|(k1, _), (k2, _)| k1.cmp(k2));

@@ -1,3 +1,5 @@
+use make_serde::{MakeSerde, SummonFrom};
+
 pub mod login;
 
 /// 用户性别
@@ -42,5 +44,65 @@ pub mod user_sex_serde {
             UserSex::Other(sex) => &sex,
         };
         serializer.serialize_str(sex)
+    }
+}
+
+/// 用户认证类型
+#[derive(Debug, Clone, Copy, SummonFrom, MakeSerde)]
+#[repr(u8)]
+#[summon(type=u8)]
+#[make_serde(type=u8)]
+pub enum OfficialRole {
+    /// 无
+    None = 0,
+    /// 个人认证 - 知名UP主
+    WellKnownUP = 1,
+    /// 个人认证 - 大V达人
+    VerifiedInfluencer = 2,
+    /// 机构认证 - 企业
+    Company = 3,
+    /// 机构认证 - 组织
+    Organization = 4,
+    /// 机构认证 - 媒体
+    Media = 5,
+    /// 机构认证 - 政府
+    Government = 6,
+    /// 个人认证 - 高能主播
+    HighEnergyStreamer = 7,
+    /// 个人认证 - 社会知名人士
+    PublicFigure = 9,
+    /// 未知（一般不会出现，除非B站改API了）
+    #[other]
+    Unknown(u8),
+}
+
+impl OfficialRole {
+    /// 是否为个人认证
+    pub fn is_personal(&self) -> bool {
+        matches!(
+            self,
+            Self::WellKnownUP
+                | Self::VerifiedInfluencer
+                | Self::HighEnergyStreamer
+                | Self::PublicFigure
+        )
+    }
+
+    /// 是否为机构认证
+    pub fn is_institutional(&self) -> bool {
+        matches!(
+            self,
+            Self::Company | Self::Organization | Self::Media | Self::Government
+        )
+    }
+
+    /// 是否为 `Unknown`
+    pub fn is_unknown(&self) -> bool {
+        matches!(self, Self::Unknown(..))
+    }
+
+    /// 是否未认证（为 `None`）
+    pub fn is_none(&self) -> bool {
+        matches!(self, Self::None)
     }
 }

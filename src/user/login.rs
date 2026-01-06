@@ -1,5 +1,6 @@
 use crate::make_serde;
 
+pub mod login_base_info;
 pub mod operation;
 
 #[derive(Debug, Clone, Copy)]
