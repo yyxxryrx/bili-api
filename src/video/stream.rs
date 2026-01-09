@@ -362,7 +362,7 @@ impl VideoStreamArgs {
             ("qn", self.qn.map(|q| u32::from(&q).to_string())),
             ("fnval", Some(u32::from(&self.fanval).to_string())),
             ("fnver", Some(self.fnver.to_string())),
-            ("fourk", Some(self.fourk.to_string())),
+            ("fourk", Some((self.fourk as u8).to_string())),
             ("session", self.session.clone()),
             ("otype", self.otype.clone()),
             ("type", self.r#type.clone()),
@@ -370,8 +370,8 @@ impl VideoStreamArgs {
                 "platform",
                 Some(<&VideoPlatform as Into<&str>>::into(&self.platform).to_string()),
             ),
-            ("high_quality", Some(self.high_quality.to_string())),
-            ("try_look", Some(self.try_look.to_string())),
+            ("high_quality", Some((self.high_quality as u8).to_string())),
+            ("try_look", Some((self.try_look as u8).to_string())),
         ]
     }
 }

@@ -1,5 +1,5 @@
-// TODO: 当前文件有点乱，到时候会拆分的
 use crate::{APIResponse, error::APIResult};
+use make_serde::{MakeSerde, SummonFrom};
 use serde::{Deserialize, Serialize};
 
 /// The information of video
@@ -427,7 +427,7 @@ pub struct VideoUgcSeasonInfo {
     /// 视频合集标题
     pub title: String,
     /// 视频合集作者id
-    pub mid: String,
+    pub mid: u64,
     /// 视频合集介绍
     pub intro: String,
     /// 作用尚不明确
@@ -453,7 +453,7 @@ pub struct VideoUgcSeasonSection {
     /// 视频合集中分部所属视频合集id
     pub season_id: u32,
     /// 视频合集中分部id
-    pub section_id: u32,
+    pub section_id: Option<u32>,
     /// 视频合集中分部标题
     pub title: String,
     /// 作用尚不明确
@@ -535,12 +535,15 @@ pub struct VideoStaffInfo {
 #[derive(Debug, Deserialize, Serialize)]
 pub struct VideoStaffVip {
     /// 成员会员类型
-    // TODO: 这里应该是Enum，现放个u8占位
     #[serde(rename = "type")]
-    pub vip_type: u8,
-    // TODO: 这里应该是Enum，现放个u8占位
+    pub vip_type: crate::user::VipType,
     /// 会员状态
-    pub status: u8,
+    ///
+    /// `false`: 无
+    ///
+    /// `true`: 有
+    #[serde(with = "crate::util::serde_u8_2_bool")]
+    pub status: bool,
     /// 到期时间 (Unix 毫秒时间戳)
     pub due_date: f64,
     pub vip_pay_type: i32,
@@ -552,17 +555,19 @@ pub struct VideoStaffVip {
 /// 成员认证信息
 #[derive(Debug, Deserialize, Serialize)]
 pub struct VideoStaffOfficial {
-    // TODO: 这里应该是Enum，现放个u8占位
     /// 成员认证级别
-    pub role: u8,
+    pub role: crate::user::OfficialRole,
     /// 成员认证名称
     pub title: String,
     /// 成员认证备注
     pub desc: String,
-    // TODO: 这里应该是Enum，现放个u8占位
     /// 成员认证类型
-    #[serde(rename = "type")]
-    pub official_type: i8,
+    ///
+    /// `false`: 无
+    ///
+    /// `true`: 有
+    #[serde(rename = "type", with = "crate::util::serde_i8_2_bool")]
+    pub official_type: bool,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -580,13 +585,26 @@ pub struct VideoHonorReply {
 pub struct VideoHonor {
     /// 当前稿件aid
     pub aid: u64,
-    // TODO: 这里应该是Enum，现放个u8占位
     /// 类型
     #[serde(rename = "type")]
-    pub honor_type: u8,
+    pub honor_type: VideoHonorType,
     /// 描述
     pub desc: String,
     pub weekly_recommend_num: i32,
+}
+
+#[derive(Debug, Clone, Copy, SummonFrom, MakeSerde)]
+#[summon(type=u8)]
+#[make_serde(try, type=u8)]
+pub enum VideoHonorType {
+    /// 入站必刷收录
+    MandatoryRefreshOnEntry = 1,
+    /// 第?期每周必看
+    WeeklyMustWatch = 2,
+    /// 全站排行榜最高第?名
+    PeakGlobalRanking = 3,
+    /// 热门
+    Trending = 4,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -768,7 +786,6 @@ pub async fn get_video_info(
         .send()
         .await?;
     let json = response.text().await?;
-    println!("json: {json}");
     let data: APIResponse<VideoInfoData> = serde_json::from_str(&json)?;
     data.into_result()
 }

@@ -106,3 +106,12 @@ impl OfficialRole {
         matches!(self, Self::None)
     }
 }
+
+#[derive(Debug, Clone, Copy, SummonFrom, MakeSerde)]
+#[summon(type=u8)]
+#[make_serde(try, type=u8)]
+pub enum VipType {
+    None = 0,
+    MonthlyMember = 1,
+    YearlyMember = 2,
+}
