@@ -593,9 +593,15 @@ pub struct VideoHonor {
     pub weekly_recommend_num: i32,
 }
 
+/// 类型
+///
+/// 来自 [获取视频详细信息(web端)](https://socialsisteryi.github.io/bilibili-API-collect/docs/video/info.html#%E8%8E%B7%E5%8F%96%E8%A7%86%E9%A2%91%E8%AF%A6%E7%BB%86%E4%BF%A1%E6%81%AF-web%E7%AB%AF)
+///
+/// 位置：`data` > `honor_reply` > `honor` > `type`
 #[derive(Debug, Clone, Copy, SummonFrom, MakeSerde)]
+#[repr(u8)]
 #[summon(type=u8)]
-#[make_serde(try, type=u8)]
+#[make_serde(type=u8)]
 pub enum VideoHonorType {
     /// 入站必刷收录
     MandatoryRefreshOnEntry = 1,
@@ -605,6 +611,9 @@ pub enum VideoHonorType {
     PeakGlobalRanking = 3,
     /// 热门
     Trending = 4,
+    /// 未知
+    #[other]
+    Unknown(u8)
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]

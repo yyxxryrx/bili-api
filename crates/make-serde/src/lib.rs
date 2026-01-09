@@ -222,13 +222,13 @@ pub fn derive_summon_from(input: TokenStream) -> TokenStream {
         }
         None => {
             quote::quote! {
-                type Error = #t;
+                type Error = String;
                 fn try_from(value: #t) -> Result<Self, Self::Error> {
                     match value {
                         #(
                             #exprs => Ok(Self::#names),
                         )*
-                        _ => Err(value)
+                        _ => Err(format!("Unknown value: {value}"))
                     }
                 }
             }
