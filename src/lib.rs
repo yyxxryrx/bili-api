@@ -30,14 +30,17 @@ macro_rules! get_client {
 #[macro_export]
 macro_rules! make_headers {
     () => {
-        reqwest::header::HeaderMap::new()
+        $crate::reqwest::header::HeaderMap::new()
+    };
+    (@name: $name:ident, key: $key:ident, value: $val:literal) => {
+        $name.insert($crate::reqwest::header::$key, $crate::reqwest::header::HeaderValue::from_static($val));
     };
     ($($key:ident: $val:expr),+$(,)?) => {
         {
-            let mut headers = reqwest::header::HeaderMap::new();
+            let mut headers = $crate::reqwest::header::HeaderMap::new();
             $(
-                headers.insert(reqwest::header::$key, reqwest::header::HeaderValue::from_static($val));
-            )*
+                $crate::make_headers(@name: headers, key: $key, value: $val);
+            )+
             headers
         }
     };

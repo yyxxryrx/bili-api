@@ -1,4 +1,4 @@
-use crate::{APIResponse, error::APIResult, get_client, make_headers};
+use crate::{APIResponse, error::APIResult, make_headers};
 use make_serde::{MakeSerde, SummonFrom};
 use serde::{Deserialize, Serialize};
 
@@ -382,6 +382,6 @@ pub async fn get_season_info(
         .text()
         .await?;
     println!("{resp}");
-    let resp: APIResponse<SeasonInfoData> =serde_json::from_str(&resp)?;
+    let resp: APIResponse<SeasonInfoData> = serde_json::from_str(&resp)?;
     resp.into_result()
 }

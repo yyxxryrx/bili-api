@@ -97,7 +97,7 @@ pub struct VideoInfoData {
     /// Activity ID in which the manuscript participated
     ///
     /// 稿件参与的活动id
-    pub mission_id: i32,
+    pub mission_id: Option<i32>,
     /// Redirect URL
     ///
     /// > This field only exists for TV dramas or movies
@@ -573,7 +573,7 @@ pub struct VideoUserGarb {
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct VideoHonorReply {
-    pub honor: Vec<VideoHonor>,
+    pub honor: Option<Vec<VideoHonor>>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -768,6 +768,7 @@ pub async fn get_video_info(
         .send()
         .await?;
     let json = response.text().await?;
+    println!("json: {json}");
     let data: APIResponse<VideoInfoData> = serde_json::from_str(&json)?;
     data.into_result()
 }

@@ -70,7 +70,7 @@ pub struct NavData {
     /// 商品推广页面
     pub shop_url: String,
     /// (?)
-    pub allowance_count: i64,
+    pub allowance_count: Option<i64>,
     /// (?)
     pub answer_status: i64,
     /// 是否硬核会员
@@ -116,6 +116,12 @@ impl From<&str> for NextExpInfo {
     }
 }
 
+impl From<u32> for NextExpInfo {
+    fn from(value: u32) -> Self {
+        Self::Value(value)
+    }
+}
+
 impl From<&NextExpInfo> for String {
     fn from(value: &NextExpInfo) -> Self {
         match value {
@@ -128,11 +134,22 @@ impl From<&NextExpInfo> for String {
 
 make_serde! {
     pub mod serde_next_exp_info(NextExpInfo) {
-        (dse) => {
-            String::deserialize(dse).map(|s| NextExpInfo::from(s.as_str()))
+        (der) => {
+            use serde_json::Value;
+            match Value::deserialize(der)? {
+                Value::String(s) => Ok(From::from(s.as_str())),
+                Value::Number(v) => v
+                    .as_u64()
+                    .map(|v| From::from(v as u32))
+                    .ok_or_else(|| serde::de::Error::custom("not u64")),
+                _ => Err(serde::de::Error::custom("except string or intager")),
+            }
         },
         (info, ser) => {
-            ser.serialize_str(String::from(info).as_str())
+            match info {
+                NextExpInfo::Value(v) => ser.serialize_u32(*v),
+                _ => ser.serialize_str(String::from(info).as_str()),
+            }
         },
     }
 }
@@ -256,11 +273,11 @@ impl NavData {
 
 /// 导航栏用户信息
 pub async fn nav(client: &reqwest::Client) -> APIResult<NavData> {
-    client
+    let response = client
         .get("https://api.bilibili.com/x/web-interface/nav")
         .send()
-        .await?
-        .json::<APIResponse<NavData>>()
-        .await?
-        .into_result()
+        .await?;
+    let json = response.text().await?;
+    let data: APIResponse<NavData> = serde_json::from_str(&json)?;
+    data.into_result()
 }

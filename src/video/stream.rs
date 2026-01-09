@@ -204,7 +204,9 @@ pub struct VideoStreamDataResp {
 impl VideoStreamDataResp {
     pub fn into_result(self) -> APIResult<VideoStreamData> {
         match self.v_voucher {
-            Some(..) => Err(crate::error::Error::Other("need arg gaia_source=view-card".to_string())),
+            Some(..) => Err(crate::error::Error::Other(
+                "need arg gaia_source=view-card".to_string(),
+            )),
             None => Ok(VideoStreamData {
                 quality: self.quality.unwrap(),
                 format: self.format.unwrap(),
@@ -375,7 +377,7 @@ impl VideoStreamArgs {
 /// 获取视频流
 pub async fn get_video_stream(
     client: &reqwest::Client,
-    id: VideoID,
+    id: &VideoID,
     cid: u64,
     args: &VideoStreamArgs,
     wbi_sign: Option<&WbiSign>,
@@ -391,9 +393,9 @@ pub async fn get_video_stream(
         .headers(make_headers!())
         .query(&params)
         .send()
-        .await?
-        .json::<APIResponse<VideoStreamDataResp>>()
         .await?;
+    println!("Url: {}", resp.url());
+    let resp = resp.json::<APIResponse<VideoStreamDataResp>>().await?;
 
     resp.into_result().and_then(|r| r.into_result())
 }

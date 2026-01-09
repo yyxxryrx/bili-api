@@ -33,6 +33,14 @@ impl TryFrom<&str> for VideoID {
     }
 }
 
+impl std::str::FromStr for VideoID {
+    type Err = error::VideoIDParseError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Self::try_from(s)
+    }
+}
+
 impl VideoID {
     /// 获取aid
     pub fn aid(&self) -> Option<u64> {
