@@ -58,7 +58,7 @@ impl WbiSign {
         let mut hasher = Md5::new();
         hasher.update(args + &self.mixin_key);
         let w_rid = hasher.finalize();
-        Ok(String::from_utf8(w_rid.to_vec())?)
+        Ok(hex::encode(w_rid))
     }
 }
 

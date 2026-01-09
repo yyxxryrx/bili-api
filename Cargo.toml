@@ -16,6 +16,7 @@ thiserror = "2.0.17"
 serde_json = "1.0.146"
 serde_urlencoded = "0.7.1"
 md-5 = "0.10.6"
+hex = "0.4.3"
 
 [dependencies.image]
 version = "0.25.9"
@@ -32,3 +33,4 @@ features = ["cookies", "json"]
 
 [dependencies.make-serde]
 path = "crates/make-serde"
+
