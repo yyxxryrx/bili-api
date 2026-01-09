@@ -2,6 +2,7 @@ use crate::video::VideoID;
 use crate::{APIResponse, error::APIResult, make_headers, make_serde, sign_and_auth::wbi::WbiSign};
 use make_serde::{MakeSerde, SummonFrom};
 use serde::{Deserialize, Serialize};
+use build_builder::BuildBuilder;
 
 /// Video clarity
 ///
@@ -306,7 +307,7 @@ pub struct SupportFormat {
     pub codecs: Option<Vec<String>>,
 }
 
-#[derive(Debug, Default, Deserialize, Serialize)]
+#[derive(Debug, Default, Deserialize, Serialize, BuildBuilder)]
 pub struct VideoStreamArgs {
     /// view-card
     ///
@@ -328,7 +329,8 @@ pub struct VideoStreamArgs {
     /// 画质最高 1080P：0（默认）
     ///
     /// 画质最高 4K：1
-    pub fourk: u8,
+    #[serde(with = "crate::util::serde_u8_2_bool")]
+    pub fourk: bool,
     /// 从视频播放页的 HTML 中设置 window.\_\_playinfo\_\_ 处获取，
     /// 或者通过 buvid3 + 当前UNIX毫秒级时间戳 经过md5获取
     pub session: Option<String>,
@@ -344,11 +346,13 @@ pub struct VideoStreamArgs {
     /// 是否高画质
     ///
     /// platform=html5时，此值为1可使画质为1080p
-    pub high_quality: u8,
+    #[serde(with = "crate::util::serde_u8_2_bool")]
+    pub high_quality: bool,
     /// 未登录高画质
     ///
     /// 为 1 时可以不登录拉到 64 和 80 清晰度
-    pub try_look: u8,
+    #[serde(with = "crate::util::serde_u8_2_bool")]
+    pub try_look: bool,
 }
 
 impl VideoStreamArgs {
@@ -384,7 +388,7 @@ pub async fn get_video_stream(
 ) -> APIResult<VideoStreamData> {
     let mut params = id.to_query().to_vec();
     params.push(("cid", Some(cid.to_string())));
-    params.append(&mut args.to_query().to_vec());
+    params.extend_from_slice(&args.to_query());
     if let Some(wbi) = wbi_sign {
         wbi.sign_option(&mut params)?;
     }

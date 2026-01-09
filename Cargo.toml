@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [workspace]
-members = [".", "crates/make-serde"]
+members = [".", "crates/build-builder", "crates/make-serde"]
 resolver = "3"
 
 [features]
@@ -33,4 +33,7 @@ features = ["cookies", "json"]
 
 [dependencies.make-serde]
 path = "crates/make-serde"
+
+[dependencies.build-builder]
+path = "crates/build-builder"
 

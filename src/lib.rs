@@ -48,6 +48,28 @@ macro_rules! make_headers {
 
 #[macro_export]
 macro_rules! make_serde {
+    ($vis:vis mod $name:ident($($t:ident)::+!) { ($de:ident) => $b1:block $(, ($val:ident, $se:ident) => $b2:block)? $(,)?}) => {
+        $vis mod $name {
+                use $crate::serde::{Deserialize, Deserializer, Serializer};
+
+                type Target = $($t)::+;
+
+                pub fn deserialize<'de, D>($de: D) -> Result<Target, D::Error>
+                where
+                    D: Deserializer<'de>,
+                $b1
+
+                $(
+                pub fn serialize<S>(
+                    $val: &Target,
+                    $se: S,
+                ) -> Result<S::Ok, S::Error>
+                where
+                    S: Serializer,
+                $b2
+                )?
+            }
+    };
     ($vis:vis mod $name:ident($t:ident) { ($de:ident) => $b1:block $(, ($val:ident, $se:ident) => $b2:block)? $(,)?}) => {
         $vis mod $name {
                 use super::$t;
@@ -68,11 +90,6 @@ macro_rules! make_serde {
                 $b2
                 )?
             }
-    };
-    ($($($tt:tt)+);*;) => {
-        $(
-            $crate::make_serde!($($tt)+)
-        )*
     };
 }
 
