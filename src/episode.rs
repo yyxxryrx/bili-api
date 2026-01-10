@@ -2,6 +2,7 @@ use make_serde::{MakeSerde, SummonFrom};
 
 pub mod info;
 
+/// 剧集地区
 #[repr(u32)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, SummonFrom, MakeSerde)]
 pub enum SeriesRegion {
@@ -140,4 +141,70 @@ pub enum SeriesRegion {
     /// 未知
     #[other]
     Unknown(u32),
+}
+
+/// 剧集ID
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum EpisodeID {
+    SeasonId(u64),
+    EpId(u64),
+}
+
+impl TryFrom<&str> for EpisodeID {
+    type Error = error::EpisodeIDParseError;
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        let s = value.to_lowercase();
+        if s.starts_with("ep") {
+            let v = s.chars().skip(2).collect::<String>().parse::<u64>()?;
+            Ok(Self::EpId(v))
+        } else if s.starts_with("ss") {
+            let v = s.chars().skip(2).collect::<String>().parse::<u64>()?;
+            Ok(Self::SeasonId(v))
+        } else {
+            Err(error::EpisodeIDParseError::FormatError(value.to_string()))
+        }
+    }
+}
+
+impl std::str::FromStr for EpisodeID {
+    type Err = error::EpisodeIDParseError;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        s.try_into()
+    }
+}
+
+impl From<&EpisodeID> for String {
+    fn from(value: &EpisodeID) -> Self {
+        match value {
+            EpisodeID::EpId(id) => format!("ep{id}"),
+            EpisodeID::SeasonId(id) => format!("ss{id}"),
+        }
+    }
+}
+
+impl std::fmt::Display for EpisodeID {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", String::from(self))
+    }
+}
+
+impl EpisodeID {
+    pub fn to_tuple(&self) -> (&'static str, String) {
+        match self {
+            Self::EpId(id) => ("ep_id", id.to_string()),
+            Self::SeasonId(id) => ("season_id", id.to_string()),
+        }
+    }
+}
+
+mod error {
+    use thiserror::Error;
+
+    #[derive(Debug, Error)]
+    pub enum EpisodeIDParseError {
+        #[error("Parse Error: {0}")]
+        ParseError(#[from] std::num::ParseIntError),
+        #[error(r#"Format Error: must starts with "ss" or "ep", bug got "{0}""#)]
+        FormatError(String),
+    }
 }

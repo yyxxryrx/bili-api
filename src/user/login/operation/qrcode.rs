@@ -11,20 +11,24 @@ struct LoginQRGenData {
 
 /// 登录二维码状态
 #[derive(PartialEq, Debug, Eq)]
-pub enum LoginQRStatue {
+pub enum LoginQRStatus {
+    /// 未扫描
     NoScan,
+    /// 超时或失败
     TimeoutOrFailure,
+    /// 已扫描，等待登录
     Scanned,
+    /// 登录成功
     Success,
 }
 
-impl Default for LoginQRStatue {
+impl Default for LoginQRStatus {
     fn default() -> Self {
         Self::NoScan
     }
 }
 
-impl LoginQRStatue {
+impl LoginQRStatus {
     /// 从状态码创建状态
     pub fn from_code(code: i32) -> Option<Self> {
         match code {
@@ -48,10 +52,7 @@ impl LoginQRStatue {
 
     /// 是否登录成功
     pub fn is_success(&self) -> bool {
-        match self {
-            Self::Success => true,
-            _ => false,
-        }
+        matches!(self, Self::Success)
     }
 }
 
@@ -68,7 +69,7 @@ struct LoginQRRefreshData {
 /// 工具类，帮你管理二维码生命周期和拿取cookie
 pub struct LoginQR {
     key: String,
-    pub statue: LoginQRStatue,
+    pub status: LoginQRStatus,
     pub qrcode_url: String,
 }
 
@@ -77,7 +78,7 @@ impl LoginQR {
         Self {
             key,
             qrcode_url,
-            statue: Default::default(),
+            status: Default::default(),
         }
     }
 
@@ -86,7 +87,7 @@ impl LoginQR {
         &mut self,
         client: &reqwest::Client,
     ) -> APIResult<Option<HashMap<String, String>>> {
-        if self.statue == LoginQRStatue::Success {
+        if self.status == LoginQRStatus::Success {
             return Ok(None);
         }
         let response = client
@@ -101,11 +102,11 @@ impl LoginQR {
         let json = &response.text().await?;
         let resp: APIResponse<LoginQRRefreshData> = serde_json::from_str(json)?;
         let resp = resp.into_result()?;
-        let Some(statue) = LoginQRStatue::from_code(resp.code) else {
+        let Some(statue) = LoginQRStatus::from_code(resp.code) else {
             return Err(crate::error::Error::Unknown("Unknown code".to_string()));
         };
-        self.statue = statue;
-        Ok(if self.statue == LoginQRStatue::Success {
+        self.status = statue;
+        Ok(if self.status == LoginQRStatus::Success {
             Some(cookies)
         } else {
             None

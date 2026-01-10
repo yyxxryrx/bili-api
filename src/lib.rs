@@ -21,9 +21,26 @@ pub extern crate serde;
 macro_rules! get_client {
     () => {
         $crate::reqwest::Client::builder()
+            .cookie_store(true)
             .timeout(std::time::Duration::from_secs(30))
             .user_agent("Mozilla/5.0 (X11; Linux x86_64; rv:146.0) Gecko/20100101 Firefox/146.0")
             .build()
+    };
+}
+
+#[macro_export]
+macro_rules! add_header {
+    ($name:ident, $key:ident: $val:literal $(=> $call:ident($($arg:expr),*))?) => {
+        $name.insert(
+            $crate::reqwest::header::$key,
+            $crate::reqwest::header::HeaderValue::from_static($val)$(.$call($($arg),*))?,
+        );
+    };
+    ($name:ident, $key:ident: $val: expr $(;$tt:tt)? $(=> $call:ident($($arg:expr),*))?) => {
+        $name.insert(
+            $crate::reqwest::header::$key,
+            $crate::reqwest::header::HeaderValue::from_str($val)$($tt)?$(.$call($($arg),*))?,
+        );
     };
 }
 
@@ -32,14 +49,14 @@ macro_rules! make_headers {
     () => {
         $crate::reqwest::header::HeaderMap::new()
     };
-    (@name: $name:ident, key: $key:ident, value: $val:literal) => {
-        $name.insert($crate::reqwest::header::$key, $crate::reqwest::header::HeaderValue::from_static($val));
-    };
-    ($($key:ident: $val:expr),+$(,)?) => {
+    ($($key:ident: $val:expr $(;$tt:tt)? $(=> $call:ident($($arg:expr),*))?),+$(,)?) => {
         {
             let mut headers = $crate::reqwest::header::HeaderMap::new();
             $(
-                $crate::make_headers(@name: headers, key: $key, value: $val);
+                $crate::add_header! {
+                    headers,
+                    $key: $val$(; $tt)?$( => $call($($arg),*))?
+                };
             )+
             headers
         }

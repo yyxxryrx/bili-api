@@ -284,6 +284,13 @@ pub struct NewEpisode {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SeasonNewEpisode {
+    pub cover: String,
+    pub id: u32,
+    pub index_show: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SeasonPublish {
     pub is_finish: i32,
     pub is_started: i32,
@@ -318,10 +325,9 @@ pub struct Season {
     pub badge_type: i32,
     pub cover: String,
     pub media_id: u64,
-    pub new_ep: Option<NewEpisode>,
+    pub new_ep: Option<SeasonNewEpisode>,
     pub season_id: u64,
     pub season_title: String,
-    pub title: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -334,7 +340,7 @@ pub struct SeasonSeries {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SeasonStat {
     pub coins: u64,
-    pub danmaku: u64,
+    // pub danmaku: u64,
     pub favorites: u64,
     pub likes: u64,
     pub reply: u64,
@@ -352,36 +358,22 @@ pub struct UpInfo {
     pub uname: String,
 }
 
-/// Query by season_id or ep_id
-///
-/// 通过 season_id 或 ep_id 查询
-pub enum EpisodeQuery {
-    SeasonId(u64),
-    EpId(u64),
-}
-
 /// Get season info
 ///
 /// 获取剧集信息
 pub async fn get_season_info(
     client: &reqwest::Client,
-    query: EpisodeQuery,
+    eid: super::EpisodeID,
 ) -> APIResult<SeasonInfoData> {
-    let mut params = vec![];
-    match query {
-        EpisodeQuery::SeasonId(sid) => params.push(("season_id", sid.to_string())),
-        EpisodeQuery::EpId(epid) => params.push(("ep_id", epid.to_string())),
-    }
-
     let resp = client
         .get("https://api.bilibili.com/pgc/view/web/season")
         .headers(make_headers!())
-        .query(&params)
+        .query(&[eid.to_tuple()])
         .send()
         .await?
         .text()
         .await?;
-    println!("{resp}");
+    println!("Json: {resp}");
     let resp: APIResponse<SeasonInfoData> = serde_json::from_str(&resp)?;
     resp.into_result()
 }

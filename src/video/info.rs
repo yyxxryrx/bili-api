@@ -68,7 +68,7 @@ pub struct VideoInfoData {
     ///
     /// 新版视频简介
     pub desc_v2: Vec<VideoDescV2>,
-    /// video statue
+    /// video status
     ///
     /// 视频状态
     pub state: i8,
@@ -117,10 +117,10 @@ pub struct VideoInfoData {
     ///
     /// 视频UP主信息
     pub owner: VideoOwner,
-    /// Video statue
+    /// Video status
     ///
     /// 视频状态数
-    pub stat: VideoStatue,
+    pub stat: VideoStatus,
     /// Dispute/Warning Information
     ///
     /// 争议/警告信息
@@ -301,7 +301,7 @@ pub struct VideoOwner {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct VideoStatue {
+pub struct VideoStatus {
     /// 稿件aid
     pub aid: u64,
     /// 播放数

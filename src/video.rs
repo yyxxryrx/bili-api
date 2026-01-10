@@ -1,3 +1,5 @@
+use std::fmt::Formatter;
+
 pub mod info;
 pub mod stream;
 
@@ -6,6 +8,15 @@ pub mod stream;
 pub enum VideoID {
     Aid(u64),
     Bvid(String),
+}
+
+impl std::fmt::Display for VideoID {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Aid(id) => write!(f, "av{id}"),
+            Self::Bvid(id) => write!(f, "{id}"),
+        }
+    }
 }
 
 impl TryFrom<&str> for VideoID {
@@ -58,11 +69,27 @@ impl VideoID {
         }
     }
 
-    /// 将VideoID变为query对象
+    /// 将 VideoID 变为 query 对象
+    ///
+    /// aid: aid
+    ///
+    /// bvid: bvid
     pub fn to_query(&self) -> [(&'static str, Option<String>); 2] {
         [
             ("aid", self.aid().map(|v| v.to_string())),
             ("bvid", self.bvid().map(|v| v.to_string())),
+        ]
+    }
+
+    /// 将 VideoID 变为 query 对象
+    ///
+    /// aid: avid
+    ///
+    /// bvid: bvid
+    pub fn to_query2(&self) -> [(&'static str, Option<String>); 2] {
+        [
+            ("avid", self.aid().map(|v| v.to_string())),
+            ("bvid", self.bvid().map(String::from)),
         ]
     }
 }

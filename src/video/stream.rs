@@ -1,8 +1,8 @@
 use crate::video::VideoID;
 use crate::{APIResponse, error::APIResult, make_headers, make_serde, sign_and_auth::wbi::WbiSign};
+use build_builder::BuildBuilder;
 use make_serde::{MakeSerde, SummonFrom};
 use serde::{Deserialize, Serialize};
-use build_builder::BuildBuilder;
 
 /// Video clarity
 ///
@@ -53,7 +53,7 @@ impl TryFrom<u32> for VideoQuality {
             125 => Ok(Self::HDR),
             126 => Ok(Self::Dolby),
             127 => Ok(Self::P8K),
-            _ => Err(format!("Unknown video quality: {}", value)),
+            _ => Err(format!("Unknown video quality: {value}")),
         }
     }
 }
@@ -386,7 +386,7 @@ pub async fn get_video_stream(
     args: &VideoStreamArgs,
     wbi_sign: Option<&WbiSign>,
 ) -> APIResult<VideoStreamData> {
-    let mut params = id.to_query().to_vec();
+    let mut params = id.to_query2().to_vec();
     params.push(("cid", Some(cid.to_string())));
     params.extend_from_slice(&args.to_query());
     if let Some(wbi) = wbi_sign {
